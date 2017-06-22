@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "avl.h"
+                 //Done by: Matheus Leal
+                //June at 2017
 
 No * criaAvl(No * root, int valor){
     No * aux = (No*)malloc(sizeof(No));
@@ -127,7 +129,7 @@ No * removerAvl(No * root, int valor){
     return root;
 }
 
-/* PRINT  */
+/* PRINT  done for Eduardo Lagoeiro*/
 int treeDepth(No*raiz){
     if(raiz == NULL){
         return 0;
