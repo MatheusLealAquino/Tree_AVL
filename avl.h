@@ -1,6 +1,9 @@
 #ifndef AVL_H
 #define AVL_H
 
+                //Done by: Matheus Leal
+                //June at 2017
+
 typedef struct no{
     int dado;
     struct no * right;
