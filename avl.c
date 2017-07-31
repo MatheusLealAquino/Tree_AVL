@@ -4,67 +4,39 @@
                  //Done by: Matheus Leal
                 //June at 2017
 
-No * criaAvl(No * root, int valor){
-    No * aux = (No*)malloc(sizeof(No));
+avl_node_t * criaAvl(int valor){
+    avl_node_t * aux = (avl_node_t*)malloc(sizeof(avl_node_t));
     aux->right = aux->left = NULL;
     aux->dado = valor;
+    aux->height = 1;
     return aux;
 }
-No * rotacaoLeft(No * root){ //Roda para a esquerda
-    No * aux;
-    aux = root->right;
-    root->right = aux->left;
-    aux->left = root;
-    root = aux;
-    return root;
-}
-No * rotacaoRight(No * root){ //Roda para a direita
-    No * aux;
-    aux = root->left;
-    root->left = aux->right;
-    aux->right = root;
-    root = aux;
-    return root;
+
+int max(int a, int b){
+    if(a > b) return a;
+    return b;
 }
 
-No * rotacaoRightLeft(No * root){
-    root->right = rotacaoRight(root->right);
-    return rotacaoLeft(root);
+int getHeight(avl_node_t * root){
+    if(root == NULL) return 0;
+    return root->height;
 }
 
-No * rotacaoLeftRight(No * root){
-    root->left = rotacaoLeft(root->left);
-    return rotacaoRight(root);
+int maxHeight(avl_node_t * root){
+	return max(getHeight(root->left), getHeight(root->right));
 }
 
-int altura(No * root){
-    if(root == NULL) {
-        return 0;
-    }else{
-        int alt1 = altura(root->left);
-        int alt2 = altura(root->right);
-
-        if(alt1 > alt2){
-            return alt1+1;
-        }else{
-            return alt2+1;
-        }
-    }
-}
-int fatorBalanceamento(No * root){
-    return altura(root->right)-altura(root->left);
-}
-
-No * insereAvl(No * root, int valor){
+avl_node_t * insert(avl_node_t * root, int valor){
     if(root == NULL)
-        return criaAvl(root, valor);
+        return criaAvl(valor);
     else if(valor < root->dado)
-        root->left = insereAvl(root->left,valor);
+        root->left = insert(root->left,valor);
     else if(valor > root->dado)
-        root->right = insereAvl(root->right,valor);
+        root->right = insert(root->right,valor);
     else{
         return root;
     }
+    root->height = maxHeight(root)+1;
     int b = fatorBalanceamento(root);
     if(b > 1){
         if(root->right->dado < valor){
@@ -82,44 +54,44 @@ No * insereAvl(No * root, int valor){
     }
     return root;
 }
-
-No * removerAvl(No * root, int valor){
+avl_node_t * delete(avl_node_t * root, int valor){
     if(root == NULL)
         return NULL;
-    else if(root->dado > valor) root->left = removerAvl(root->left,valor);
-    else if(root->dado < valor) root->right = removerAvl(root->right,valor);
+    else if(root->dado > valor) root->left = delete(root->left,valor);
+    else if(root->dado < valor) root->right = delete(root->right,valor);
     else{
         if(root->dado== valor && root->left == NULL && root->right == NULL){
             free(root);
             root = NULL;
         }else if(root->left == NULL){
-            No * temp = root;
+            avl_node_t * temp = root;
             root = root->right;
             free(temp);
         }else if(root->right == NULL){
-            No * temp = root;
+            avl_node_t * temp = root;
             root = root->left;
             free(temp);
         }else{
-            No * temp = root->left;
+            avl_node_t * temp = root->left;
             while(temp->right != NULL)
                 temp = temp->right;
             root->dado = temp->dado;
             temp->dado = valor;
-            root->left = removerAvl(root->left,valor);
+            root->left = delete(root->left,valor);
         }
     }
     if(root != NULL){
+        root->height = maxHeight(root)+1;
         int b = fatorBalanceamento(root);
         if(b > 1){
-            if(root->right->dado < valor){
+            if(b >= 0){
                return rotacaoLeft(root);
             }else{
                 return rotacaoRightLeft(root);
             }
         }
         if(b < -1){
-            if(root->left->dado > valor){
+            if(b <=0){
                 return rotacaoRight(root);
             }else{
                 return rotacaoLeftRight(root);
@@ -128,25 +100,79 @@ No * removerAvl(No * root, int valor){
     }
     return root;
 }
+avl_node_t * search(avl_node_t * root, int valor){
+    if(root == NULL){
+        printf("Valor nao esta na arvore.\n");
+        return root;
+    }else{
+        if(root->dado > valor){
+            search(root->left,valor);
+        }else if(root->dado < valor){
+            search(root->right,valor);
+        }else{
+            printf("Valor na arvore.\n");
+            return root;
+        }
+    }
+}
+avl_node_t * destroyTree(avl_node_t * root){
+    if(root != NULL){
+        root->left = destroyTree(root->left);
+        root->right = destroyTree(root->right);
+        free(root);
+    }
+    return NULL;
+}
+int fatorBalanceamento(avl_node_t * root){
+    if(root != NULL) return getHeight(root->right)-getHeight(root->left);
+    return 0;
+}
 
-/* PRINT  done for Eduardo Lagoeiro*/
-int treeDepth(No*raiz){
-    if(raiz == NULL){
+int altura(avl_node_t * root){
+    if(root == NULL) {
         return 0;
     }else{
-        int lDepth = treeDepth(raiz->left);
-        int rDepth = treeDepth(raiz->right);
+        int alt1 = altura(root->left);
+        int alt2 = altura(root->right);
 
-        if(lDepth > rDepth){
-            return (lDepth+1);
-        }
-        else{
-            return(rDepth+1);
+        if(alt1 > alt2){
+            return alt1+1;
+        }else{
+            return alt2+1;
         }
     }
 }
 
-void printTreeOrder(No* root){
+avl_node_t * rotacaoLeft(avl_node_t * root){ //Roda para a esquerda
+    avl_node_t * aux;
+    aux = root->right;
+    root->right = aux->left;
+    aux->left = root;
+    root->height = maxHeight(root)+1;
+	aux->height = maxHeight(aux)+1;
+    return aux;
+}
+avl_node_t * rotacaoRight(avl_node_t * root){ //Roda para a direita
+    avl_node_t * aux;
+    aux = root->left;
+    root->left = aux->right;
+    aux->right = root;
+    root->height = maxHeight(root)+1;
+	aux->height = maxHeight(aux)+1;
+    return aux;
+}
+avl_node_t * rotacaoRightLeft(avl_node_t * root){
+    root->right = rotacaoRight(root->right);
+    return rotacaoLeft(root);
+}
+avl_node_t * rotacaoLeftRight(avl_node_t * root){
+    root->left = rotacaoLeft(root->left);
+    return rotacaoRight(root);
+}
+
+/* PRINT  */
+
+void printTreeOrder(avl_node_t* root){
     if(root==NULL){
         return;
     }
@@ -154,14 +180,12 @@ void printTreeOrder(No* root){
     printf("%d ", root->dado);
     printTreeOrder(root->right);
 }
-
 void printaEspacos(int x){
     for (int i = 0; i < x; ++i){
         printf(" ");
     }
 }
-
-void printLevel(No *arvore, int level, int n){
+void printLevel(avl_node_t *arvore, int level, int n){
     if (level == 0){
         printaEspacos(n);
         if(arvore != NULL){
@@ -193,9 +217,9 @@ int numberOfSpaces(int x){
     j--;
     return j;
 }
-void printElements(No * arvore){
+void printElements(avl_node_t * arvore){
     int i;
-    int height = treeDepth(arvore);
+    int height = altura(arvore);
 
     for(i = 0; i < height; i++){
         int n = numberOfSpaces(height-i);
@@ -213,9 +237,9 @@ int pw(int x, int y){
     }
     return r;
 }
-void printElementsTraco(No * arvore){
+void printElementsTraco(avl_node_t * arvore){
     int i;
-    int height = treeDepth(arvore);
+    int height = altura(arvore);
 
     for(i = 0; i < height; i++){
         int n = numberOfSpaces(height-i);
